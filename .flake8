@@ -63,8 +63,12 @@ extend-ignore=
         WPS454,
         # Str start with dot
         WPS348,
+        # Isort
         I001,
+        # Isort
         I004,
+        # Possible hardcoded password
+        S105,
 
 
 per-file-ignores=
