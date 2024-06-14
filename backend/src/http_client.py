@@ -28,14 +28,24 @@ class CMCHTTPClient:
         self._api_key = api_key
 
     async def start(self) -> None:
+        """
+        Start the client session with the provided base URL and API key.
+
+        The session will include the API key in the headers for authentication.
+        """
         self._session = ClientSession(
             headers={
-                settings.API_AUTHORIZATION_HEADER: self._api_key
+                settings.API_AUTHORIZATION_HEADER: self._api_key,
             },
-            base_url=self._base_url
+            base_url=self._base_url,
         )
 
     async def stop(self) -> None:
+        """
+        Close the client session.
+
+        If the session is not started, this method does nothing.
+        """
         if self._session:
             await self._session.close()
 
