@@ -68,7 +68,7 @@ async def login_for_access_token(form_data: UserCreateOrLogin):
             detail=str(error),
         )
     return {
-        'token': auth.generate_JWT_token(username=user.username),
+        'token': auth.generate_jwt_token(username=user.username),
         'token_type': 'bearer',
     }
 
