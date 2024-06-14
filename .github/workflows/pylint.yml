@@ -39,4 +39,4 @@ jobs:
         pip install httpx
         pip install pydantic_settings
     - name: Pytest
-      run: coverage run --source=. -m pytest
+      run: cd backend && coverage run --source=. -m pytest
