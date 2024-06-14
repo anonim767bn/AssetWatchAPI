@@ -137,7 +137,6 @@ async def create_user_asset(asset_form: AssetCreate, current_user: User = get_cu
         raise HTTPException(status_code=HTTP_STATUS_NOT_FOUND, detail='Currency not found')
     try:
         asset = user_operations.create_user_asset(current_user, currency)
-        print(asset)
     except Exception as create_error:
         raise HTTPException(status_code=HTTP_STATUS_BAD_REQUEST, detail=f'create_user_asset {str(create_error)}')
     try:
