@@ -69,6 +69,10 @@ extend-ignore=
         I004,
         # Possible hardcoded password
         S105,
+        # Found outer scope names shadowing
+        WPS442,
+        # Found too many module members
+        WPS202
 
 
 per-file-ignores=
