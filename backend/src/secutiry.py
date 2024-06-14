@@ -1,41 +1,29 @@
-from passlib.context import CryptContext
+"""This module contains the Authentication class for handling user authentication."""
+
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
-from src.config import settings
-from src.db import user_operations, DB
-from src.models import User
 from typing import Optional
+
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+
+from src.config import settings
+from src.db import user_operations
+from src.models import User
 
 
 class Authentication:
-    """
-    A class used to handle user authentication.
+    """A class used to handle user authentication."""
 
-    ...
-
-    Attributes
-    ----------
-    pwd_context : CryptContext
-        an instance of CryptContext for password hashing and verification
-
-    Methods
-    -------
-    verify_password(plain_password: str, hashed_password: str) -> bool:
-        Verifies if the plain password matches the hashed password.
-    get_password_hash(password: str) -> str:
-        Returns the hashed version of the provided password.
-    generate_JWT_token(username: str, encode_data: Optional[Dict[str, Any]] = {}, expires_timedelta: timedelta = None) -> str:
-        Generates a JWT token with the provided data.
-    authenticate_user(username: str, password: str) -> User:
-        Authenticates the user with the provided username and password.
-    get_username_by_token(token: str) -> str | None:
-        Returns the username associated with the provided token.
-    """
     def __init__(self):
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        """
+        Initialize an instance of the Authentication class.
+
+        The instance is initialized with a CryptContext for password hashing and verification.
+        """
+        self.pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        """ Compare plain password with hashed password
+        """Compare plain password with hashed password.
 
         Args:
             plain_password (str): Plain text password
@@ -47,7 +35,7 @@ class Authentication:
         return self.pwd_context.verify(plain_password, hashed_password)
 
     def get_password_hash(self, password: str) -> str:
-        """Get password hash
+        """Get password hash.
 
         Args:
             password (str): Password or any string who need to hash
@@ -57,29 +45,36 @@ class Authentication:
         """
         return self.pwd_context.hash(password)
 
-    def generate_JWT_token(self, username: str, encode_data: Optional[dict] = {}, expires_timedelta: timedelta = None) -> str:
-        """Generate JWT token
+    def generate_jwt_token(
+        self,
+        username: str,
+        encode_data: Optional[dict] = None,
+        expires_timedelta: Optional[timedelta] = None,
+    ) -> str:
+        """Generate JWT token.
 
         Args:
-            username (str): Username of the user. Encoden in the token as 'sub'
-            encode_data (Dict[str, Any]): Any data to encode in the token
-            expires_timedelta (timedelta, optional): Token lifetime. Defaults in config. 
+            username (str): Username of the user. Encoded in the token as 'sub'.
+            encode_data (Dict[str, Any], optional): Any data to encode in the token. Defaults to None.
+            expires_timedelta (timedelta, optional): Token lifetime. Defaults in config.
 
         Returns:
-            str: JWT token
-        
+            str: JWT token.
+
         Raises:
-            ValueError: If encode_data is not a dictionary
+            ValueError: If encode_data is not a dictionary.
         """
+        if encode_data is None:
+            encode_data = {}
         if not isinstance(encode_data, dict):
-            raise ValueError("encode_data must be a dictionary")
+            raise ValueError('encode_data must be a dictionary')
 
         to_encode = encode_data.copy()
         if not expires_timedelta:
             expires_timedelta = timedelta(
                 minutes=settings.TOKEN_EXPIRE_MINUTES)
         expire = datetime.utcnow() + expires_timedelta
-        to_encode.update({"exp": expire, "sub": username})
+        to_encode.update({'exp': expire, 'sub': username})
         return jwt.encode(to_encode, settings.TOKEN_SECRET, algorithm=settings.ALGORITHM)
 
     async def authenticate_user(self, username: str, password: str) -> User:
@@ -103,22 +98,22 @@ class Authentication:
             raise Exception('Incorrect password')
         return user
 
-    async def get_username_by_token(self, token: str) -> str | None:
+    async def get_username_by_token(self, token: str) -> Optional[str]:
         """
         Get the username of the user by the JWT token.
+
         Args:
             token (str): JWT token
 
         Returns:
-            str | None: string of the username or None if the token is invalid or expired
+            Optional[str]: string of the username or None if the token is invalid or expired
         """
         try:
-            payload = jwt.decode(token, settings.TOKEN_SECRET,
-                                 algorithms=[settings.ALGORITHM])
-            user = payload['sub']
-            return user
-        except JWTError as e:
+            payload = jwt.decode(token, settings.TOKEN_SECRET, algorithms=[settings.ALGORITHM])
+        except JWTError:
             return None
+
+        return payload.get('sub', None)
 
 
 auth = Authentication()
