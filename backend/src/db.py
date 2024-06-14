@@ -189,8 +189,8 @@ class UserOperations:
                 db_session.flush()
                 asset_id = asset.id
         # Get the asset from the database in the session where it will be used
-        with self.db.get_session() as db_session:
-            asset = db_session.query(Asset).filter_by(id=asset_id).first()
+        with self.db.get_session() as db_session2:
+            asset = db_session2.query(Asset).filter_by(id=asset_id).first()
         return asset
 
 
@@ -274,12 +274,15 @@ class AssetOperation:
 
         Returns:
             AssetAmountPriceHistory: The AssetAmountPriceHistory object that was added.
+
+        Raises:
+            ValueError: If no asset is found with the provided ID.
         """
         with self.db.get_session() as db_session:
             with db_session.begin():
                 fresh_asset = db_session.query(Asset).filter_by(id=asset_id).first()
                 if fresh_asset is None:
-                    raise ValueError(f"No asset found with ID {asset_id}")
+                    raise ValueError(f'No asset found with ID {asset_id}')
                 price = CurrencyOperation(self.db).get_latest_price_by_currency_from_db(fresh_asset.currency).price
                 asset_amount = AssetAmountPriceHistory(
                     asset_id=fresh_asset.id, amount=amount, timestamp=datetime.utcnow(), price=price)
