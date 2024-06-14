@@ -86,7 +86,6 @@ async def register(form_data: UserCreateOrLogin):
     Raises:
         HTTPException: If the username is already taken.
     """
-    print(form_data)
     user = user_operations.get_user_by_username_from_db(form_data.username)
     if user:
         raise HTTPException(

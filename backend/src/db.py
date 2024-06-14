@@ -6,6 +6,7 @@ from dateutil.parser import parse
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import session, sessionmaker
+from uuid import UUID
 
 from src.config import settings
 from src.http_client import cmc_client
@@ -45,13 +46,6 @@ class Database:
                         currency = db_session.query(Currency).filter_by(
                             name=row['name']).first()
                         if not currency:
-                            name = row['name']
-                            symbol = row['symbol']
-                            price = row['quote']['USD']['price']
-                            timestamp = row['timestamp']
-
-                            print(f'{name=} {symbol=}: {price=} {timestamp=}')
-
                             currency = Currency(
                                 name=row['name'], symbol=row['symbol'])
                             db_session.add(currency)
@@ -62,6 +56,8 @@ class Database:
                             timestamp=parse(row['timestamp']),
                         )
                         db_session.add(history)
+                    db_session.flush()
+                    print('Price histories updated successfully')
         except (SQLAlchemyError, Exception) as error:
             print(f'Error occurred: {error}')
 
@@ -158,6 +154,7 @@ class UserOperations:
             with self.db.get_session() as db_session:
                 asset_info_list = []
                 for asset in db_session.query(Asset).filter_by(user_id=user.id).all():
+                    print(asset.amount_price_histories)
                     asset_amount = max(asset.amount_price_histories, key=lambda _: _.timestamp).amount
                     asset_price = max(asset.amount_price_histories, key=lambda _: _.timestamp).price
                     asset_info = {
@@ -190,7 +187,11 @@ class UserOperations:
                 asset = Asset(user_id=user.id, currency_id=currency.id)
                 db_session.add(asset)
                 db_session.flush()
-                return asset
+                asset_id = asset.id
+        # Get the asset from the database in the session where it will be used
+        with self.db.get_session() as db_session:
+            asset = db_session.query(Asset).filter_by(id=asset_id).first()
+        return asset
 
 
 class CurrencyOperation:
@@ -263,12 +264,12 @@ class AssetOperation:
         with self.db.get_session() as db_session:
             return db_session.query(Asset).filter_by(user_id=user.id, currency_id=currency.id).first()
 
-    def add_asset_amount(self, asset: Asset, amount: float) -> AssetAmountPriceHistory:
+    def add_asset_amount(self, asset_id: UUID, amount: float) -> AssetAmountPriceHistory:
         """
         Add an amount to the asset.
 
         Args:
-            asset (Asset): asset object
+            asset_id (UUID): ID of the asset
             amount (float): amount to add
 
         Returns:
@@ -276,11 +277,14 @@ class AssetOperation:
         """
         with self.db.get_session() as db_session:
             with db_session.begin():
-                asset = db_session.query(Asset).get(asset.id)
-                price = CurrencyOperation(self.db).get_latest_price_by_currency_from_db(asset.currency).price
+                fresh_asset = db_session.query(Asset).filter_by(id=asset_id).first()
+                if fresh_asset is None:
+                    raise ValueError(f"No asset found with ID {asset_id}")
+                price = CurrencyOperation(self.db).get_latest_price_by_currency_from_db(fresh_asset.currency).price
                 asset_amount = AssetAmountPriceHistory(
-                    asset_id=asset.id, amount=amount, timestamp=datetime.utcnow(), price=price)
+                    asset_id=fresh_asset.id, amount=amount, timestamp=datetime.utcnow(), price=price)
                 db_session.add(asset_amount)
+                db_session.flush()
                 return asset_amount
 
     def get_last_asset_amount(self, asset: Asset) -> AssetAmountPriceHistory | None:

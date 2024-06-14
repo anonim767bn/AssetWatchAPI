@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 THIRTY = 30
 SIXTY = 60
 SEVEN = 7
-FIVE = 5
+FIVE = 1
 
 
 class Settings(BaseSettings):

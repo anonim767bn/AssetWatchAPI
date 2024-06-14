@@ -74,6 +74,7 @@ class AssetAmountPriceHistory(Base, UUIDmixin):
     __table_args__ = (
         UniqueConstraint('asset_id', 'timestamp'),
         CheckConstraint('price >= 0'),
+        CheckConstraint('amount >= 0'),
     )
 
 

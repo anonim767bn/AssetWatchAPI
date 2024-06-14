@@ -49,7 +49,7 @@ class CMCHTTPClient:
         Raises:
             Exception: If any error occurred.
         """
-        self.start()
+        await self.start()
         try:
             async with self._session.get('/v1/cryptocurrency/listings/latest') as response:
                 response_json = await response.json()
@@ -58,7 +58,7 @@ class CMCHTTPClient:
         except (ClientResponseError, json.JSONDecodeError) as error:
             raise Exception(f'Error occurred: {error}')
         finally:
-            self.stop()
+            await self.stop()
 
 
 # Initialize the CoinMarketCap HTTP client
