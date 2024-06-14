@@ -293,4 +293,3 @@ def test_generate_jwt_token():
     encode_data = 'not a dictionary'
     with pytest.raises(ValueError):
         auth.generate_jwt_token(username, encode_data, expires_timedelta)
-
