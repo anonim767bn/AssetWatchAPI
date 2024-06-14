@@ -38,5 +38,6 @@ jobs:
         pip install requests
         pip install httpx
         pip install pydantic_settings
+        pip install python-dateutil
     - name: Pytest
       run: cd backend && coverage run --source=. -m pytest
