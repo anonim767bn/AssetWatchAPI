@@ -26,7 +26,7 @@ class CMCHTTPClient:
         self._session = None
         self._base_url = base_url
         self._api_key = api_key
-    
+
     async def start(self) -> None:
         self._session = ClientSession(
             headers={
@@ -34,7 +34,7 @@ class CMCHTTPClient:
             },
             base_url=self._base_url
         )
-    
+
     async def stop(self) -> None:
         if self._session:
             await self._session.close()
