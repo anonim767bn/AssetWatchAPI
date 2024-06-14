@@ -1,20 +1,28 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, UniqueConstraint, CheckConstraint, Text, DateTime
-from uuid import uuid4
-from sqlalchemy.dialects.postgresql import UUID
+"""This module contains the SQLAlchemy ORM models for the application."""
+
 from datetime import datetime
 from typing import List
+from uuid import uuid4
+
+from sqlalchemy import (CheckConstraint, DateTime, ForeignKey, Text,
+                        UniqueConstraint)
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    pass
+    """Base class for all SQLAlchemy ORM models."""
 
 
 class UUIDmixin:
+    """Mixin class for models that use a UUID as primary key."""
+
     id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid4)
 
 
 class User(Base, UUIDmixin):
+    """User model."""
+
     __tablename__ = 'user'
 
     username: Mapped[str] = mapped_column(
@@ -29,6 +37,8 @@ class User(Base, UUIDmixin):
 
 
 class Asset(Base, UUIDmixin):
+    """Asset model."""
+
     __tablename__ = 'asset'
 
     amount_price_histories: Mapped[List['AssetAmountPriceHistory']] = relationship(
@@ -48,6 +58,7 @@ class Asset(Base, UUIDmixin):
 
 
 class AssetAmountPriceHistory(Base, UUIDmixin):
+    """AssetAmountPriceHistory model."""
 
     __tablename__ = 'asset_price_history'
 
@@ -62,11 +73,13 @@ class AssetAmountPriceHistory(Base, UUIDmixin):
 
     __table_args__ = (
         UniqueConstraint('asset_id', 'timestamp'),
-        CheckConstraint('price >= 0')
+        CheckConstraint('price >= 0'),
     )
 
 
 class Currency(Base, UUIDmixin):
+    """Currency model."""
+
     __tablename__ = 'currency'
 
     name: Mapped[str] = mapped_column(Text, nullable=False, index=True)
@@ -84,6 +97,8 @@ class Currency(Base, UUIDmixin):
 
 
 class PriceHistory(Base, UUIDmixin):
+    """PriceHistory model."""
+
     __tablename__ = 'price_history'
 
     currency_id: Mapped[UUID] = mapped_column(
@@ -96,5 +111,5 @@ class PriceHistory(Base, UUIDmixin):
 
     __table_args__ = (
         UniqueConstraint('currency_id', 'timestamp'),
-        CheckConstraint('price >= 0')
+        CheckConstraint('price >= 0'),
     )
